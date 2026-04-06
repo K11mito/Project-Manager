@@ -1,0 +1,2078 @@
+/* ============================================================
+   NERV // EVANGELION UI SYSTEM — "GMI MODE"
+   ============================================================
+   Neon Genesis Evangelion-inspired interface override.
+   All rules scoped under .gmi on the root element.
+   ============================================================ */
+
+/* --- Custom Properties --- */
+.gmi {
+  --bg: #050505;
+  --surface: #0a0a0a;
+  --surface-hover: #111111;
+  --accent: #ff6a00;
+  --accent-dim: rgba(255, 106, 0, 0.1);
+  --success: #00ff41;
+  --warning: #ffd600;
+  --danger: #ff0033;
+  --muted: rgba(255, 106, 0, 0.35);
+  --border: rgba(255, 106, 0, 0.2);
+  --border-bright: rgba(255, 106, 0, 0.5);
+  --text: #ff6a00;
+  --text-secondary: #cc5500;
+  --font-ui: 'JetBrains Mono', 'Courier New', monospace;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --eva-green: #00ff41;
+  --eva-green-dim: rgba(0, 255, 65, 0.1);
+  --eva-green-glow: rgba(0, 255, 65, 0.25);
+  --eva-orange-glow: rgba(255, 106, 0, 0.3);
+  --eva-red: #ff0033;
+  --eva-red-dim: rgba(255, 0, 51, 0.1);
+  --eva-cyan: #00c8ff;
+  --eva-panel-bg: rgba(255, 106, 0, 0.03);
+}
+
+/* --- Animations --- */
+@keyframes eva-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  96% { opacity: 0.9; }
+  97% { opacity: 1; }
+}
+
+@keyframes eva-pulse {
+  0%, 100% { box-shadow: 0 0 4px var(--eva-orange-glow); }
+  50% { box-shadow: 0 0 12px var(--eva-orange-glow), 0 0 24px rgba(255, 106, 0, 0.1); }
+}
+
+@keyframes eva-pulse-green {
+  0%, 100% { box-shadow: 0 0 4px var(--eva-green-glow); }
+  50% { box-shadow: 0 0 12px var(--eva-green-glow), 0 0 24px rgba(0, 255, 65, 0.1); }
+}
+
+@keyframes eva-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes eva-scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes eva-boot {
+  from { opacity: 0; transform: scale(0.98); filter: brightness(2); }
+  to { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes eva-data-stream {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 40px; }
+}
+
+@keyframes eva-fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eva-border-trace {
+  0% { clip-path: inset(0 100% 100% 0); }
+  25% { clip-path: inset(0 0 100% 0); }
+  50% { clip-path: inset(0 0 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+/* --- Scan Lines Overlay --- */
+.gmi .eva-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* Subtle vignette */
+.gmi .eva-scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+}
+
+/* --- Hex Grid Background --- */
+.gmi .eva-hexgrid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(circle, rgba(255, 106, 0, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* --- Base Overrides --- */
+.gmi body,
+.gmi {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  animation: eva-flicker 8s infinite;
+}
+
+.gmi *::-webkit-scrollbar-thumb {
+  background: rgba(255, 106, 0, 0.3);
+  border-radius: 0;
+}
+.gmi *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 106, 0, 0.5);
+}
+.gmi *::-webkit-scrollbar-track {
+  background: rgba(255, 106, 0, 0.05);
+}
+
+.gmi input,
+.gmi textarea,
+.gmi select {
+  font-family: var(--font-mono);
+  background: rgba(255, 106, 0, 0.03);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 0;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.gmi input:focus,
+.gmi textarea:focus,
+.gmi select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--eva-orange-glow);
+  outline: none;
+}
+.gmi input::placeholder {
+  color: rgba(255, 106, 0, 0.25);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.gmi select option {
+  background: #0a0a0a;
+  color: var(--text);
+}
+
+.gmi button {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
+
+/* --- NERV Topbar --- */
+.gmi .topbar {
+  background: linear-gradient(180deg, #0d0800 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border-bright);
+  box-shadow: 0 1px 12px rgba(255, 106, 0, 0.08);
+  height: 56px;
+}
+
+.gmi .topbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.4;
+}
+
+.gmi .topbar-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.gmi .eva-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.gmi .eva-nerv-logo {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--eva-red);
+  border: 1px solid rgba(255, 0, 51, 0.4);
+  padding: 2px 8px;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.gmi .eva-nerv-logo::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid var(--eva-red);
+  border-left: 2px solid var(--eva-red);
+}
+
+.gmi .eva-nerv-logo::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 6px;
+  height: 6px;
+  border-bottom: 2px solid var(--eva-red);
+  border-right: 2px solid var(--eva-red);
+}
+
+.gmi .eva-system-title {
+  font-size: 10px;
+  color: rgba(255, 106, 0, 0.5);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.gmi .eva-topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 106, 0, 0.4);
+  text-transform: uppercase;
+}
+
+.gmi .eva-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--eva-green);
+  box-shadow: 0 0 6px var(--eva-green-glow);
+  margin-right: 4px;
+  animation: eva-pulse-green 2s infinite;
+}
+
+.gmi .eva-time-display {
+  font-size: 11px;
+  color: var(--eva-green);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Buttons --- */
+.gmi .btn {
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 400;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.gmi .btn-primary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border-bright);
+  box-shadow: 0 0 6px var(--eva-orange-glow);
+}
+.gmi .btn-primary:hover {
+  background: rgba(255, 106, 0, 0.1);
+  box-shadow: 0 0 12px var(--eva-orange-glow);
+  border-color: var(--accent);
+}
+
+.gmi .btn-ghost {
+  color: rgba(255, 106, 0, 0.5);
+  border: 1px solid transparent;
+}
+.gmi .btn-ghost:hover {
+  background: rgba(255, 106, 0, 0.06);
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+/* --- Status Pills --- */
+.gmi .status-pill {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border: 1px solid;
+}
+.gmi .status-active {
+  background: var(--eva-green-dim);
+  color: var(--eva-green);
+  border-color: rgba(0, 255, 65, 0.3);
+}
+.gmi .status-paused {
+  background: rgba(255, 214, 0, 0.08);
+  color: var(--warning);
+  border-color: rgba(255, 214, 0, 0.3);
+}
+.gmi .status-idea {
+  background: rgba(255, 106, 0, 0.05);
+  color: rgba(255, 106, 0, 0.5);
+  border-color: rgba(255, 106, 0, 0.2);
+}
+
+/* --- EVA Panel Mixin (used on cards, panels, modals) --- */
+.gmi .eva-panel {
+  position: relative;
+  background: var(--eva-panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: 0 0 8px rgba(255, 106, 0, 0.05);
+}
+
+.gmi .eva-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gmi .eva-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gmi .eva-panel-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.4);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gmi .eva-panel-label::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 10px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.gmi .eva-panel-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+/* --- Dashboard --- */
+.gmi .dashboard {
+  position: relative;
+  z-index: 1;
+  padding: 24px;
+}
+
+.gmi .eva-dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gmi .eva-dashboard-title {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gmi .eva-dashboard-title::before {
+  content: '///';
+  color: rgba(255, 106, 0, 0.3);
+}
+
+.gmi .eva-unit-count {
+  font-size: 10px;
+  color: var(--eva-green);
+  font-variant-numeric: tabular-nums;
+}
+
+.gmi .last-scanned {
+  color: rgba(255, 106, 0, 0.35);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* --- API Banner (Warning) --- */
+.gmi .api-banner {
+  background: rgba(255, 0, 51, 0.06);
+  border: 1px solid rgba(255, 0, 51, 0.3);
+  border-radius: 0;
+  color: var(--eva-red);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.gmi .api-banner::before {
+  content: 'WARNING';
+  position: absolute;
+  top: 2px;
+  left: 12px;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(255, 0, 51, 0.4);
+  animation: eva-blink 1.5s infinite;
+}
+
+/* --- Project Grid --- */
+.gmi .project-grid {
+  gap: 12px;
+}
+
+/* --- Project Card --- */
+.gmi .project-card {
+  background: var(--eva-panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: visible;
+}
+
+.gmi .project-card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 16px rgba(255, 106, 0, 0.1);
+  transform: none;
+}
+
+.gmi .project-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.gmi .project-card::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.gmi .card-thumbnail {
+  height: 6px;
+  opacity: 0.6;
+}
+
+.gmi .eva-unit-designation {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.3);
+  padding: 6px 16px 0;
+  font-family: var(--font-mono);
+}
+
+.gmi .card-body {
+  padding: 8px 16px 14px;
+}
+
+.gmi .card-name {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.gmi .card-summary {
+  font-size: 11px;
+  color: rgba(255, 106, 0, 0.4);
+  letter-spacing: 0.02em;
+}
+
+.gmi .card-footer {
+  margin-top: 6px;
+}
+
+/* EVA progress bar */
+.gmi .progress-bar-track {
+  background: rgba(255, 106, 0, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  height: 6px;
+}
+
+.gmi .progress-bar-fill {
+  background: var(--eva-green);
+  border-radius: 0;
+  box-shadow: 0 0 6px var(--eva-green-glow);
+  position: relative;
+}
+
+.gmi .progress-text {
+  color: var(--eva-green);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.gmi .brief-badge {
+  color: var(--eva-green);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Modal --- */
+.gmi .modal-overlay {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.gmi .modal {
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 0;
+  box-shadow: 0 0 40px rgba(255, 106, 0, 0.1), 0 0 80px rgba(255, 106, 0, 0.05);
+  position: relative;
+  animation: eva-boot 0.3s ease-out;
+}
+
+.gmi .modal::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+.gmi .modal::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+.gmi .modal h2 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gmi .form-group label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.45);
+}
+
+/* --- Project Detail --- */
+.gmi .project-detail {
+  animation: eva-boot 0.2s ease-out;
+}
+
+.gmi .detail-left {
+  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 106, 0, 0.02) 0%, transparent 200px);
+  position: relative;
+  z-index: 1;
+}
+
+.gmi .detail-right {
+  background: rgba(255, 106, 0, 0.01);
+  position: relative;
+  z-index: 1;
+}
+
+.gmi .detail-name {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gmi .back-btn {
+  color: rgba(255, 106, 0, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.gmi .back-btn:hover {
+  color: var(--accent);
+  background: rgba(255, 106, 0, 0.06);
+  border-color: var(--border-bright);
+}
+
+/* --- Brief Panel --- */
+.gmi .brief-panel {
+  background: var(--eva-panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  position: relative;
+}
+
+.gmi .brief-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+}
+
+.gmi .brief-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+.gmi .brief-panel h3 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.5);
+}
+
+.gmi .brief-content {
+  font-size: 12px;
+  color: rgba(255, 106, 0, 0.6);
+  line-height: 1.7;
+  font-family: var(--font-mono);
+}
+
+/* --- Commits --- */
+.gmi .commits-panel h3 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(255, 106, 0, 0.5);
+}
+
+.gmi .commit-item {
+  border-bottom-color: var(--border);
+  font-family: var(--font-mono);
+}
+
+.gmi .commit-sha {
+  color: var(--eva-green);
+  font-size: 10px;
+}
+
+.gmi .commit-msg {
+  color: rgba(255, 106, 0, 0.5);
+  font-size: 11px;
+}
+
+.gmi .commit-time {
+  color: rgba(255, 106, 0, 0.25);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+/* --- File Tree --- */
+.gmi .file-tree-panel h3 {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(255, 106, 0, 0.5);
+}
+
+.gmi .tree-item {
+  font-size: 11px;
+  color: rgba(255, 106, 0, 0.4);
+}
+.gmi .tree-item.dir {
+  color: var(--text);
+}
+.gmi .tree-item.dir:hover {
+  color: var(--eva-green);
+}
+
+/* --- Kanban --- */
+.gmi .kanban-header {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(255, 106, 0, 0.5);
+  border-bottom-color: var(--border);
+  text-transform: uppercase;
+}
+
+.gmi .kanban-count {
+  background: rgba(255, 106, 0, 0.1);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--text);
+  font-size: 9px;
+  padding: 1px 5px;
+}
+
+.gmi .kanban-card {
+  background: var(--eva-panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 106, 0, 0.65);
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gmi .kanban-card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 8px rgba(255, 106, 0, 0.08);
+}
+
+.gmi .kanban-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+.gmi .kanban-card-actions button {
+  color: rgba(255, 106, 0, 0.3);
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+.gmi .kanban-card-actions button:hover {
+  color: var(--accent);
+  background: rgba(255, 106, 0, 0.08);
+}
+
+.gmi .kanban-add-input {
+  border: 1px dashed var(--border);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  background: transparent;
+}
+.gmi .kanban-add-input::placeholder {
+  color: rgba(255, 106, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* --- AI Task Input --- */
+.gmi .ai-task-input label {
+  font-family: var(--font-mono);
+  color: rgba(255, 106, 0, 0.5);
+  letter-spacing: 0.12em;
+}
+
+/* --- Settings --- */
+.gmi .settings {
+  position: relative;
+  z-index: 1;
+}
+
+.gmi .settings h2 {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.gmi .settings-group label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.45);
+}
+
+.gmi .settings-group select {
+  width: 100%;
+}
+
+.gmi .settings-row {
+  border-bottom-color: var(--border);
+}
+
+.gmi .toggle {
+  background: rgba(255, 106, 0, 0.15);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  width: 40px;
+  height: 20px;
+}
+.gmi .toggle.on {
+  background: rgba(255, 106, 0, 0.25);
+  border-color: var(--border-bright);
+  box-shadow: 0 0 8px var(--eva-orange-glow);
+}
+.gmi .toggle::after {
+  background: var(--accent);
+  border-radius: 0;
+  width: 14px;
+  height: 14px;
+  top: 2px;
+  left: 2px;
+}
+.gmi .toggle.on::after {
+  transform: translateX(20px);
+}
+
+/* --- GMI Mode Toggle (Special) --- */
+.gmi .eva-gmi-toggle {
+  background: rgba(255, 106, 0, 0.04);
+  border: 1px solid var(--border-bright);
+  padding: 16px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.gmi .eva-gmi-toggle::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+}
+
+.gmi .eva-gmi-toggle::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+/* Non-GMI mode: style the GMI toggle to look inviting */
+.gmi-toggle-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(108, 99, 255, 0.04);
+  border: 1px solid rgba(108, 99, 255, 0.15);
+  border-radius: 8px;
+}
+
+.gmi .gmi-toggle-section {
+  background: rgba(255, 106, 0, 0.04);
+  border: 1px solid var(--border-bright);
+  border-radius: 0;
+  position: relative;
+}
+
+.gmi .gmi-toggle-section::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+}
+
+.gmi .gmi-toggle-section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+/* --- Toast --- */
+.gmi .toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.gmi .toast.error {
+  border-color: var(--eva-red);
+  color: var(--eva-red);
+  box-shadow: 0 0 12px rgba(255, 0, 51, 0.15);
+}
+.gmi .toast.success {
+  border-color: var(--eva-green);
+  color: var(--eva-green);
+  box-shadow: 0 0 12px var(--eva-green-glow);
+}
+
+/* --- Spinner --- */
+.gmi .spinner {
+  border-color: var(--border);
+  border-top-color: var(--accent);
+  border-radius: 0;
+}
+
+/* --- Loading Skeleton --- */
+.gmi .loading-skeleton {
+  background: linear-gradient(90deg, rgba(255, 106, 0, 0.03) 25%, rgba(255, 106, 0, 0.08) 50%, rgba(255, 106, 0, 0.03) 75%);
+  background-size: 200% 100%;
+  border-radius: 0;
+}
+
+/* --- Empty State --- */
+.gmi .empty-state {
+  color: rgba(255, 106, 0, 0.35);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.gmi .empty-state p {
+  font-size: 12px;
+}
+
+/* --- EVA Section Divider --- */
+.gmi .eva-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.35);
+}
+
+.gmi .eva-section-label .eva-sec-id {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.gmi .eva-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+/* --- EVA Corner Decorations for Detail Panels --- */
+.gmi .brief-panel,
+.gmi .commits-panel,
+.gmi .file-tree-panel {
+  position: relative;
+  padding-left: 20px;
+}
+
+.gmi .commits-panel::before,
+.gmi .file-tree-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  opacity: 0.3;
+}
+
+/* --- Fade in for detail panels --- */
+.gmi .brief-panel,
+.gmi .commits-panel,
+.gmi .file-tree-panel,
+.gmi .kanban-column {
+  animation: eva-fadeIn 0.3s ease-out both;
+}
+.gmi .commits-panel { animation-delay: 0.05s; }
+.gmi .file-tree-panel { animation-delay: 0.1s; }
+.gmi .kanban-column:nth-child(1) { animation-delay: 0.05s; }
+.gmi .kanban-column:nth-child(2) { animation-delay: 0.1s; }
+.gmi .kanban-column:nth-child(3) { animation-delay: 0.15s; }
+
+/* --- Warning Stripes (used on dangerous actions) --- */
+.gmi .btn[style*="color: rgb(239, 68, 68)"],
+.gmi .btn[style*="color:#ef4444"] {
+  color: var(--eva-red) !important;
+  border: 1px solid rgba(255, 0, 51, 0.3);
+}
+.gmi .btn[style*="color: rgb(239, 68, 68)"]:hover,
+.gmi .btn[style*="color:#ef4444"]:hover {
+  background: rgba(255, 0, 51, 0.08);
+  border-color: rgba(255, 0, 51, 0.5);
+  box-shadow: 0 0 12px rgba(255, 0, 51, 0.1);
+}
+
+/* --- Data readout decorations --- */
+.gmi .eva-data-line {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 106, 0, 0.2);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* --- Override status select in detail view --- */
+.gmi .detail-header select.status-pill {
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+/* Ensure card overflow hidden so corners are clean */
+.gmi .project-card {
+  overflow: hidden;
+}
+
+/* ============================================================
+   EVA COMMAND CENTRE — Dashboard Enhancements
+   ============================================================ */
+
+/* --- Command Centre Layout --- */
+.gmi .eva-command-centre {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated horizontal scan line that sweeps down the dashboard */
+.gmi .eva-command-centre::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 10%, rgba(255, 106, 0, 0.2) 40%, rgba(255, 106, 0, 0.4) 50%, rgba(255, 106, 0, 0.2) 60%, transparent 90%);
+  animation: eva-scanline-sweep 6s linear infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@keyframes eva-scanline-sweep {
+  0% { top: 0; opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* --- Data Stream Sidebar --- */
+.gmi .eva-data-stream {
+  position: absolute;
+  right: 12px;
+  top: 60px;
+  bottom: 0;
+  width: 120px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: linear-gradient(180deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, black 10%, black 90%, transparent);
+}
+
+.gmi .eva-data-stream-line {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 106, 0, 0.2);
+  line-height: 1.6;
+  white-space: nowrap;
+  animation: eva-fadeIn 0.3s ease-out;
+}
+
+/* --- Targeting Reticle Decoration --- */
+.gmi .eva-reticle {
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  z-index: 0;
+  opacity: 0.3;
+  animation: eva-reticle-spin 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes eva-reticle-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Telemetry Bar --- */
+.gmi .eva-telemetry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  background: var(--eva-panel-bg);
+  position: relative;
+  z-index: 1;
+}
+
+.gmi .eva-telemetry::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+}
+
+.gmi .eva-telemetry::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+.gmi .eva-telemetry-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.35);
+  margin-bottom: 4px;
+}
+
+.gmi .eva-telemetry-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.gmi .eva-tele-key {
+  color: rgba(255, 106, 0, 0.35);
+  margin-right: 4px;
+}
+
+.gmi .eva-tele-val {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.gmi .eva-tele-green {
+  color: var(--eva-green);
+}
+
+.gmi .eva-telemetry-spark {
+  opacity: 0.7;
+}
+
+/* --- Card Sparkline (GMI mode) --- */
+.gmi .card-sparkline {
+  margin: 8px 0 4px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* --- Urgent Panel (EVA mode) --- */
+.gmi .eva-urgent {
+  background: rgba(255, 0, 51, 0.03);
+  border: 1px solid rgba(255, 0, 51, 0.25);
+  border-radius: 0;
+  position: relative;
+  z-index: 1;
+  animation: eva-fadeIn 0.3s ease-out;
+}
+
+.gmi .eva-urgent::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--eva-red);
+  border-left: 2px solid var(--eva-red);
+}
+
+.gmi .eva-urgent::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--eva-red);
+  border-right: 2px solid var(--eva-red);
+}
+
+.gmi .eva-urgent .urgent-header {
+  border-bottom: 1px solid rgba(255, 0, 51, 0.15);
+  padding-bottom: 8px;
+}
+
+.gmi .eva-urgent .urgent-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--eva-red);
+}
+
+.gmi .urgent-blink {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--eva-red);
+  box-shadow: 0 0 8px rgba(255, 0, 51, 0.5);
+  animation: eva-blink 1s infinite;
+}
+
+.gmi .eva-urgent .urgent-count {
+  background: rgba(255, 0, 51, 0.15);
+  color: var(--eva-red);
+  border: 1px solid rgba(255, 0, 51, 0.3);
+  border-radius: 0;
+  font-size: 10px;
+}
+
+.gmi .eva-urgent .urgent-group-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 0, 51, 0.4);
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.gmi .eva-urgent .urgent-task {
+  border-radius: 0;
+  font-family: var(--font-mono);
+}
+
+.gmi .eva-urgent .urgent-task:hover {
+  background: rgba(255, 0, 51, 0.04);
+}
+
+.gmi .eva-urgent .urgent-task-indicator {
+  border-radius: 0;
+  box-shadow: 0 0 4px rgba(255, 0, 51, 0.3);
+}
+
+.gmi .eva-urgent .urgent-task-project {
+  color: rgba(255, 106, 0, 0.4);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gmi .eva-urgent .urgent-task-text {
+  color: rgba(255, 106, 0, 0.6);
+  font-size: 11px;
+}
+
+.gmi .eva-urgent .urgent-task-countdown {
+  letter-spacing: 0.06em;
+  font-size: 9px;
+}
+
+.gmi .eva-urgent .urgent-task-countdown.urgent-overdue {
+  color: var(--eva-red);
+  animation: eva-blink 2s infinite;
+}
+
+.gmi .eva-urgent .urgent-task-countdown.urgent-critical {
+  color: var(--warning);
+}
+
+/* --- Kanban Deadline (EVA mode) --- */
+.gmi .kanban-deadline {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gmi .kanban-deadline.deadline-overdue {
+  color: var(--eva-red);
+  animation: eva-blink 2s infinite;
+}
+
+.gmi .kanban-deadline.deadline-critical {
+  color: var(--warning);
+}
+
+.gmi .kanban-card.deadline-overdue {
+  border-left: 2px solid var(--eva-red);
+  box-shadow: inset 0 0 12px rgba(255, 0, 51, 0.06);
+}
+
+.gmi .kanban-card.deadline-critical {
+  border-left: 2px solid var(--warning);
+}
+
+.gmi .kanban-date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5) sepia(1) hue-rotate(-15deg) saturate(3);
+}
+
+.gmi .kanban-add-row {
+  display: flex;
+  gap: 4px;
+}
+
+.gmi .kanban-add-date {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 0;
+  color: var(--text);
+  font-family: var(--font-mono);
+  width: 28px;
+  padding: 2px;
+}
+
+/* ============================================================
+   EVA COMMAND PANELS — Bottom Dashboard Fill
+   ============================================================ */
+
+.gmi .eva-command-panels {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 24px;
+}
+
+.gmi .eva-cmd-row {
+  display: flex;
+  gap: 12px;
+}
+
+.gmi .eva-cmd-panel {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--eva-panel-bg);
+  padding: 12px 14px;
+  position: relative;
+  min-width: 0;
+  animation: eva-fadeIn 0.4s ease-out both;
+}
+
+.gmi .eva-cmd-row:nth-child(1) .eva-cmd-panel { animation-delay: 0.1s; }
+.gmi .eva-cmd-row:nth-child(2) .eva-cmd-panel:nth-child(1) { animation-delay: 0.15s; }
+.gmi .eva-cmd-row:nth-child(2) .eva-cmd-panel:nth-child(2) { animation-delay: 0.2s; }
+.gmi .eva-cmd-row:nth-child(2) .eva-cmd-panel:nth-child(3) { animation-delay: 0.25s; }
+.gmi .eva-cmd-row:nth-child(3) .eva-cmd-panel { animation-delay: 0.3s; }
+
+.gmi .eva-cmd-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+.gmi .eva-cmd-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+}
+
+.gmi .eva-cmd-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 106, 0, 0.35);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+}
+
+.gmi .eva-cmd-label::before {
+  content: '';
+  width: 3px;
+  height: 9px;
+  background: var(--accent);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* --- MAGI Triad --- */
+.gmi .eva-magi-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.gmi .eva-magi-unit {
+  flex: 1;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  position: relative;
+}
+
+.gmi .eva-magi-name {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--magi-color, var(--accent));
+  margin-bottom: 2px;
+}
+
+.gmi .eva-magi-role {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(255, 106, 0, 0.25);
+  margin-bottom: 8px;
+}
+
+.gmi .eva-magi-decision {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 400;
+  margin-bottom: 8px;
+  padding: 2px 6px;
+  display: inline-block;
+  border: 1px solid;
+}
+
+.gmi .eva-magi-decision.approve {
+  color: var(--eva-green);
+  border-color: rgba(0, 255, 65, 0.3);
+  background: rgba(0, 255, 65, 0.05);
+}
+
+.gmi .eva-magi-decision.consider {
+  color: var(--warning);
+  border-color: rgba(255, 214, 0, 0.3);
+  background: rgba(255, 214, 0, 0.05);
+}
+
+.gmi .eva-magi-decision.deny {
+  color: var(--eva-red);
+  border-color: rgba(255, 0, 51, 0.3);
+  background: rgba(255, 0, 51, 0.05);
+  animation: eva-blink 1.5s infinite;
+}
+
+.gmi .eva-magi-bar {
+  height: 3px;
+  background: rgba(255, 106, 0, 0.08);
+  overflow: hidden;
+}
+
+.gmi .eva-magi-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease-out;
+  box-shadow: 0 0 4px currentColor;
+}
+
+/* --- Waveform Monitor --- */
+.gmi .eva-waveform {
+  min-height: 110px;
+}
+
+.gmi .eva-waveform-canvas {
+  width: 100%;
+  height: 80px;
+  display: block;
+}
+
+/* --- Spectrum Analyzer --- */
+.gmi .eva-spectrum-bars {
+  display: flex;
+  gap: 3px;
+  height: 60px;
+  align-items: flex-end;
+}
+
+.gmi .eva-spectrum-bar-wrap {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.gmi .eva-spectrum-bar {
+  width: 100%;
+  min-height: 2px;
+  transition: height 0.12s ease-out;
+  border-radius: 0;
+}
+
+/* --- Radar Sweep --- */
+.gmi .eva-radar {
+  flex: 0 0 auto;
+  width: 160px;
+}
+
+.gmi .eva-radar-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gmi .eva-radar-canvas {
+  width: 120px;
+  height: 120px;
+}
+
+/* --- Hex Status Grid --- */
+.gmi .eva-hexgrid-panel {
+  flex: 1;
+}
+
+.gmi .eva-hexgrid-cells {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+}
+
+.gmi .eva-hexgrid-cell {
+  aspect-ratio: 1;
+  background: rgba(255, 106, 0, 0.15);
+  transition: opacity 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+/* --- System Log --- */
+.gmi .eva-syslog {
+  max-height: 160px;
+}
+
+.gmi .eva-syslog-entries {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  mask-image: linear-gradient(180deg, transparent, black 8%, black 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent, black 8%, black 100%);
+}
+
+.gmi .eva-syslog-entry {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  padding: 2px 0;
+  animation: eva-fadeIn 0.2s ease-out;
+}
+
+.gmi .eva-syslog-ts {
+  color: rgba(0, 255, 65, 0.4);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  font-size: 9px;
+}
+
+.gmi .eva-syslog-msg {
+  color: rgba(255, 106, 0, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== MAGI-04 OPERATOR BUTTON ===== */
+
+.gmi .magi-operator-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 65, 0.5);
+  color: #00ff41;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gmi .magi-operator-btn:hover {
+  background: rgba(0, 255, 65, 0.1);
+  border-color: #00ff41;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.gmi .magi-operator-btn.active {
+  border-color: rgba(255, 106, 0, 0.7);
+  color: #ff6a00;
+}
+
+.gmi .magi-operator-btn.active:hover {
+  background: rgba(255, 106, 0, 0.1);
+  box-shadow: 0 0 10px rgba(255, 106, 0, 0.2);
+}
+
+.magi-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 6px #00ff41;
+  animation: eva-pulse 2s ease-in-out infinite;
+}
+
+/* ===== MAGI-04 OPERATOR PANEL ===== */
+
+.magi-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  animation: magi-overlay-in 0.2s ease-out;
+}
+
+@keyframes magi-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.magi-panel {
+  width: 35%;
+  min-width: 380px;
+  max-width: 520px;
+  height: 100%;
+  background: #0a0a0b;
+  border-left: 1px solid rgba(255, 106, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: magi-slide-in 0.3s ease-out;
+  box-shadow: -4px 0 30px rgba(0, 0, 0, 0.6), -1px 0 0 rgba(255, 106, 0, 0.15);
+  position: relative;
+}
+
+.magi-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 106, 0, 0.6), transparent);
+}
+
+@keyframes magi-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Header */
+.magi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 106, 0, 0.15);
+  background: rgba(255, 106, 0, 0.03);
+  flex-shrink: 0;
+}
+
+.magi-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.magi-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff41;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+  animation: eva-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.magi-title {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff6a00;
+  letter-spacing: 1.5px;
+}
+
+.magi-subtitle {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 9px;
+  color: rgba(255, 106, 0, 0.45);
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.magi-transmitting {
+  color: #00ff41;
+  animation: eva-blink 0.6s step-end infinite;
+}
+
+.magi-recording {
+  color: #ff3333;
+  animation: eva-blink 0.5s step-end infinite;
+}
+
+.magi-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.magi-voice-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.magi-voice-btn.on {
+  border-color: rgba(0, 255, 65, 0.4);
+  color: #00ff41;
+}
+
+.magi-voice-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.magi-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 106, 0, 0.3);
+  color: rgba(255, 106, 0, 0.6);
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.magi-close-btn:hover {
+  background: rgba(255, 106, 0, 0.1);
+  border-color: #ff6a00;
+  color: #ff6a00;
+}
+
+/* Messages area */
+.magi-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 106, 0, 0.2) transparent;
+}
+
+.magi-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.magi-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.magi-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 106, 0, 0.2);
+  border-radius: 2px;
+}
+
+/* Welcome */
+.magi-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.magi-welcome-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: rgba(255, 106, 0, 0.4);
+  letter-spacing: 3px;
+  animation: eva-pulse 3s ease-in-out infinite;
+}
+
+.magi-welcome-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+}
+
+/* Message bubbles */
+.magi-msg {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.magi-msg-prefix {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.magi-msg-user .magi-msg-prefix {
+  color: rgba(0, 255, 65, 0.6);
+}
+
+.magi-msg-user .magi-msg-content {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px 12px;
+  background: rgba(0, 255, 65, 0.04);
+  border-left: 2px solid rgba(0, 255, 65, 0.3);
+}
+
+.magi-msg-assistant .magi-msg-prefix {
+  color: rgba(255, 106, 0, 0.6);
+}
+
+.magi-msg-assistant .magi-msg-content {
+  color: rgba(255, 106, 0, 0.85);
+  padding: 8px 12px;
+  background: rgba(255, 106, 0, 0.04);
+  border-left: 2px solid rgba(255, 106, 0, 0.3);
+}
+
+/* Typing cursor */
+.magi-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: #ff6a00;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: magi-cursor-blink 0.6s step-end infinite;
+}
+
+@keyframes magi-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Loading */
+.magi-loading {
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 106, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+.magi-loading-dots::after {
+  content: '';
+  animation: magi-dots 1.5s step-end infinite;
+}
+
+@keyframes magi-dots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+}
+
+/* Error */
+.magi-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #ff3333;
+  padding: 8px 12px;
+  background: rgba(255, 51, 51, 0.06);
+  border-left: 2px solid rgba(255, 51, 51, 0.4);
+  letter-spacing: 0.5px;
+  animation: eva-blink 2s step-end 3;
+}
+
+/* Input bar */
+.magi-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 106, 0, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.magi-rec-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.magi-rec-indicator.active {
+  background: #ff3333;
+  box-shadow: 0 0 10px rgba(255, 51, 51, 0.6);
+  animation: eva-pulse 0.8s ease-in-out infinite;
+}
+
+.magi-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 106, 0, 0.2);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.magi-input::placeholder {
+  color: rgba(255, 106, 0, 0.25);
+  letter-spacing: 1px;
+}
+
+.magi-input:focus {
+  border-color: rgba(255, 106, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 106, 0, 0.1);
+}
+
+.magi-input:disabled {
+  opacity: 0.4;
+}
+
+.magi-send-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 106, 0, 0.4);
+  color: #ff6a00;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.magi-send-btn:hover:not(:disabled) {
+  background: rgba(255, 106, 0, 0.1);
+  border-color: #ff6a00;
+  box-shadow: 0 0 12px rgba(255, 106, 0, 0.2);
+}
+
+.magi-send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
