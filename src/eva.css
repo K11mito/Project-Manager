@@ -15,11 +15,11 @@
   --success: #00ff41;
   --warning: #ffd600;
   --danger: #ff0033;
-  --muted: rgba(255, 106, 0, 0.35);
+  --muted: #6b5a4a;
   --border: rgba(255, 106, 0, 0.2);
   --border-bright: rgba(255, 106, 0, 0.5);
-  --text: #ff6a00;
-  --text-secondary: #cc5500;
+  --text: #e8d5c4;
+  --text-secondary: #a89080;
   --font-ui: 'JetBrains Mono', 'Courier New', monospace;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --eva-green: #00ff41;
@@ -205,7 +205,7 @@
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--accent);
 }
 
 .gmi .eva-topbar-brand {
@@ -542,12 +542,12 @@
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--accent);
 }
 
 .gmi .card-summary {
   font-size: 11px;
-  color: rgba(255, 106, 0, 0.4);
+  color: var(--text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -665,6 +665,7 @@
   font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--accent);
 }
 
 .gmi .back-btn {
@@ -724,7 +725,7 @@
 
 .gmi .brief-content {
   font-size: 12px;
-  color: rgba(255, 106, 0, 0.6);
+  color: var(--text-secondary);
   line-height: 1.7;
   font-family: var(--font-mono);
 }
@@ -748,7 +749,7 @@
 }
 
 .gmi .commit-msg {
-  color: rgba(255, 106, 0, 0.5);
+  color: var(--text-secondary);
   font-size: 11px;
 }
 
@@ -768,7 +769,7 @@
 
 .gmi .tree-item {
   font-size: 11px;
-  color: rgba(255, 106, 0, 0.4);
+  color: var(--text-secondary);
 }
 .gmi .tree-item.dir {
   color: var(--text);
@@ -802,7 +803,7 @@
   border-radius: 0;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(255, 106, 0, 0.65);
+  color: var(--text);
   position: relative;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -1016,7 +1017,7 @@
 
 /* --- Empty State --- */
 .gmi .empty-state {
-  color: rgba(255, 106, 0, 0.35);
+  color: var(--muted);
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1101,7 +1102,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.1em;
-  color: rgba(255, 106, 0, 0.2);
+  color: rgba(0, 200, 255, 0.2);
   text-transform: uppercase;
   margin-bottom: 4px;
 }
@@ -1168,7 +1169,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.15em;
-  color: rgba(255, 106, 0, 0.2);
+  color: rgba(0, 200, 255, 0.15);
   line-height: 1.6;
   white-space: nowrap;
   animation: eva-fadeIn 0.3s ease-out;
@@ -1360,7 +1361,7 @@
 }
 
 .gmi .eva-urgent .urgent-task-text {
-  color: rgba(255, 106, 0, 0.6);
+  color: var(--text);
   font-size: 11px;
 }
 
@@ -1525,7 +1526,7 @@
 .gmi .eva-magi-role {
   font-size: 8px;
   letter-spacing: 0.1em;
-  color: rgba(255, 106, 0, 0.25);
+  color: rgba(0, 200, 255, 0.35);
   margin-bottom: 8px;
 }
 
@@ -1668,7 +1669,7 @@
 }
 
 .gmi .eva-syslog-msg {
-  color: rgba(255, 106, 0, 0.35);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1946,7 +1947,7 @@
 }
 
 .magi-msg-assistant .magi-msg-content {
-  color: rgba(255, 106, 0, 0.85);
+  color: #e0cfc0;
   padding: 8px 12px;
   background: rgba(255, 106, 0, 0.04);
   border-left: 2px solid rgba(255, 106, 0, 0.3);
@@ -1973,7 +1974,7 @@
   padding: 8px 12px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: rgba(255, 106, 0, 0.5);
+  color: #a89080;
   letter-spacing: 2px;
 }
 
