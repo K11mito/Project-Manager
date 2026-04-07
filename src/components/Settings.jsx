@@ -1,4 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+const MAGI_VOICES = [
+  { id: 'onyx',    label: 'Onyx',    desc: 'Deep & authoritative' },
+  { id: 'echo',    label: 'Echo',    desc: 'Warm & measured' },
+  { id: 'fable',   label: 'Fable',   desc: 'Expressive & British' },
+  { id: 'alloy',   label: 'Alloy',   desc: 'Neutral & balanced' },
+  { id: 'nova',    label: 'Nova',    desc: 'Warm & friendly' },
+  { id: 'shimmer', label: 'Shimmer', desc: 'Clear & gentle' },
+  { id: 'ash',     label: 'Ash',     desc: 'Soft & conversational' },
+  { id: 'coral',   label: 'Coral',   desc: 'Warm & informative' },
+  { id: 'sage',    label: 'Sage',    desc: 'Calm & wise' },
+];
 
 export default function Settings({ settings, onUpdate, addToast, gmiMode }) {
   const [anthropicKey, setAnthropicKey] = useState('');
@@ -11,6 +23,10 @@ export default function Settings({ settings, onUpdate, addToast, gmiMode }) {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [gmiEnabled, setGmiEnabled] = useState(false);
   const [runningBrief, setRunningBrief] = useState(false);
+  const [magiVoice, setMagiVoice] = useState('onyx');
+  const [previewingVoice, setPreviewingVoice] = useState(null);
+  const audioCtxRef = useRef(null);
+  const sourceRef = useRef(null);
 
   useEffect(() => {
     if (settings) {
@@ -23,6 +39,7 @@ export default function Settings({ settings, onUpdate, addToast, gmiMode }) {
       setClapEnabled(settings.clapEnabled !== false);
       setVoiceEnabled(settings.voiceEnabled || false);
       setGmiEnabled(settings.gmiMode || false);
+      setMagiVoice(settings.magiVoice || 'onyx');
     }
   }, [settings]);
 
@@ -81,6 +98,43 @@ export default function Settings({ settings, onUpdate, addToast, gmiMode }) {
       addToast(gmiMode ? `${added} new unit(s) registered` : `Discovered ${added} new project(s)`, 'success');
     } catch (err) {
       addToast('Failed to scan root folder');
+    }
+  };
+
+  const stopPreview = useCallback(() => {
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch (e) {}
+      sourceRef.current = null;
+    }
+    setPreviewingVoice(null);
+  }, []);
+
+  const handlePreviewVoice = async (voiceId) => {
+    stopPreview();
+    setPreviewingVoice(voiceId);
+    try {
+      const audioData = await window.api.magiPreviewVoice(voiceId);
+      if (!audioData || audioData.length === 0) throw new Error('No audio');
+
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      const buffer = await ctx.decodeAudioData(audioData.slice(0).buffer);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      sourceRef.current = source;
+      source.onended = () => {
+        sourceRef.current = null;
+        setPreviewingVoice(null);
+      };
+      source.start();
+    } catch (err) {
+      setPreviewingVoice(null);
+      addToast(err.message?.includes('API') ? 'OpenAI API key required for voice preview' : 'Preview failed: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -186,6 +240,44 @@ export default function Settings({ settings, onUpdate, addToast, gmiMode }) {
           <button className="btn btn-primary btn-sm" onClick={handleRunBrief} disabled={runningBrief}>
             {runningBrief ? <span className="spinner" /> : gmiMode ? 'Execute Brief' : 'Run Brief Now'}
           </button>
+        </div>
+      </div>
+
+      {/* MAGI Voice Selection */}
+      <div className="settings-group">
+        <label>{gmiMode ? 'MAGI-04 Voice Profile' : 'MAGI Voice'}</label>
+        <div className="voice-grid">
+          {MAGI_VOICES.map((v) => (
+            <button
+              key={v.id}
+              className={`voice-card ${magiVoice === v.id ? 'voice-card-active' : ''} ${previewingVoice === v.id ? 'voice-card-playing' : ''}`}
+              onClick={() => {
+                setMagiVoice(v.id);
+                saveSetting('magiVoice', v.id);
+              }}
+            >
+              <div className="voice-card-top">
+                <span className="voice-card-name">{v.label}</span>
+                <button
+                  className="voice-preview-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (previewingVoice === v.id) stopPreview();
+                    else handlePreviewVoice(v.id);
+                  }}
+                  title={previewingVoice === v.id ? 'Stop' : 'Preview'}
+                >
+                  {previewingVoice === v.id ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  )}
+                </button>
+              </div>
+              <span className="voice-card-desc">{v.desc}</span>
+              {magiVoice === v.id && <span className="voice-card-check">ACTIVE</span>}
+            </button>
+          ))}
         </div>
       </div>
 

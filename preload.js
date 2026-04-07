@@ -36,8 +36,19 @@ contextBridge.exposeInMainWorld('api', {
 
   // MAGI-04 Operator
   magiChat: (messages) => ipcRenderer.invoke('magi:chat', messages),
+  magiChatWithVoice: (messages) => ipcRenderer.invoke('magi:chat-with-voice', messages),
   magiTranscribe: (audioBuffer) => ipcRenderer.invoke('magi:transcribe', audioBuffer),
+  magiSpeak: (text) => ipcRenderer.invoke('magi:speak', text),
+  magiPreviewVoice: (voice) => ipcRenderer.invoke('magi:preview-voice', voice),
 
   // Thumbnails
   loadThumbnail: (path) => ipcRenderer.invoke('thumbnail:load', path),
+
+  // Greeting (clap/voice activation)
+  onGreeting: (callback) => {
+    ipcRenderer.on('greeting:show', (_, trigger) => callback(trigger));
+  },
+  removeGreetingListener: () => {
+    ipcRenderer.removeAllListeners('greeting:show');
+  },
 });

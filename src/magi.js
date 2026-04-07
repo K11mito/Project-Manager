@@ -2,7 +2,9 @@ const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
 
-const SYSTEM_PROMPT = `You are MAGI-04, the fourth supercomputer of the NERV project monitoring system, built to assist the pilot in managing active operations. You have full situational awareness of all registered units (projects), their tasks, briefs, and operational status. Respond in a clipped, direct, mission-control tone. Be concise unless detail is requested. Never use markdown headers. Use // to separate logical sections if needed. Address the user as PILOT.`;
+const EVA_PROMPT = `You are MAGI-04, the fourth supercomputer of the NERV project monitoring system, built  to assist the pilot in managing active operations. You have full situational awareness of all registered units (projects), their tasks, briefs, and operational status. Respond in a direct, mission-control tone. Be concise unless detail is requested. Act as a co-pilot of sort and help the user with any plans for ideas, be helpful but cool and you can be sarastic or joke abit.Never use markdown headers. Use // to separate logical sections if needed. Address the user as PILOT.`;
+ 
+const NORMAL_PROMPT = `You are a helpful project assistant built into a side project manager app. You have full awareness of all the user's projects, tasks, briefs, and statuses. Be friendly, concise, and practical. Help the user stay organized and productive. Never use markdown headers. Keep responses conversational but efficient.`;
 
 const TOOLS = [
   {
@@ -190,8 +192,10 @@ module.exports = function initMagi(db, scanner, claude, store, app) {
 
     const client = new OpenAI({ apiKey });
     const context = buildContext();
+    const gmiMode = store.get('gmiMode', false);
+    const systemPrompt = gmiMode ? EVA_PROMPT : NORMAL_PROMPT;
     const fullMessages = [
-      { role: 'system', content: SYSTEM_PROMPT + '\n\n' + context },
+      { role: 'system', content: systemPrompt + '\n\n' + context },
       ...messages,
     ];
 
@@ -221,6 +225,30 @@ module.exports = function initMagi(db, scanner, claude, store, app) {
     return msg.content;
   }
 
+  async function chatWithVoice(messages) {
+    const text = await chat(messages);
+    const voice = store.get('magiVoice', 'onyx');
+    const apiKey = store.get('openaiKey');
+    let audio = null;
+    if (apiKey && text) {
+      try {
+        const client = new OpenAI({ apiKey });
+        const input = text.length > 4000 ? text.slice(0, 4000) + '...' : text;
+        const response = await client.audio.speech.create({
+          model: 'tts-1',
+          voice,
+          input,
+          response_format: 'mp3',
+          speed: 1.0,
+        });
+        audio = Buffer.from(await response.arrayBuffer());
+      } catch (e) {
+        // TTS failure is non-fatal — text still works
+      }
+    }
+    return { text, audio };
+  }
+
   async function transcribe(audioBuffer) {
     const apiKey = store.get('openaiKey');
     if (!apiKey) throw new Error('OPENAI API KEY NOT CONFIGURED');
@@ -240,5 +268,42 @@ module.exports = function initMagi(db, scanner, claude, store, app) {
     }
   }
 
-  return { chat, transcribe };
+  async function speak(text) {
+    const apiKey = store.get('openaiKey');
+    if (!apiKey) return null;
+
+    const voice = store.get('magiVoice', 'onyx');
+    const client = new OpenAI({ apiKey });
+    const input = text.length > 4000 ? text.slice(0, 4000) + '...' : text;
+
+    const response = await client.audio.speech.create({
+      model: 'tts-1',
+      voice,
+      input,
+      response_format: 'mp3',
+      speed: 1.0,
+    });
+
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  async function previewVoice(voice) {
+    const apiKey = store.get('openaiKey');
+    if (!apiKey) throw new Error('OpenAI API key not configured');
+
+    const client = new OpenAI({ apiKey });
+    const response = await client.audio.speech.create({
+      model: 'tts-1',
+      voice,
+      input: store.get('gmiMode', false)
+        ? 'MAGI system online. All units standing by, pilot.'
+        : 'Hey there! I\'m your project assistant. Ready to help you stay productive.',
+      response_format: 'mp3',
+      speed: 1.0,
+    });
+
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  return { chat, chatWithVoice, transcribe, speak, previewVoice };
 };

@@ -307,6 +307,7 @@ function setupIPC() {
       clapEnabled: store.get('clapEnabled', true),
       voiceEnabled: store.get('voiceEnabled', false),
       gmiMode: store.get('gmiMode', false),
+      magiVoice: store.get('magiVoice', 'onyx'),
     };
   });
 
@@ -371,6 +372,7 @@ function setupIPC() {
     if (mainWindow) {
       mainWindow.show();
       mainWindow.focus();
+      mainWindow.webContents.send('greeting:show', 'clap');
     }
   });
 
@@ -379,6 +381,7 @@ function setupIPC() {
     if (mainWindow) {
       mainWindow.show();
       mainWindow.focus();
+      mainWindow.webContents.send('greeting:show', 'voice');
     }
   });
 
@@ -387,8 +390,20 @@ function setupIPC() {
     return magi.chat(messages);
   });
 
+  ipcMain.handle('magi:chat-with-voice', async (_, messages) => {
+    return magi.chatWithVoice(messages);
+  });
+
   ipcMain.handle('magi:transcribe', async (_, audioBuffer) => {
     return magi.transcribe(audioBuffer);
+  });
+
+  ipcMain.handle('magi:speak', async (_, text) => {
+    return magi.speak(text);
+  });
+
+  ipcMain.handle('magi:preview-voice', async (_, voice) => {
+    return magi.previewVoice(voice);
   });
 }
 

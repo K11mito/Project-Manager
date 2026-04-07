@@ -68,7 +68,7 @@ function useTTS() {
   return { isSpeaking, voiceEnabled, setVoiceEnabled, speak, stop };
 }
 
-export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
+export default function MagiOperator({ isOpen, onClose, onProjectsChanged, gmiMode }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,16 +79,38 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
   const inputRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const messagesRef = useRef([]);
+  const audioCtxRef = useRef(null);
+  const sourceNodeRef = useRef(null);
+
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const tts = useTTS();
   const typewriter = useTypewriter(typingResponse, 25, () => {
     if (typingResponse) {
-      tts.speak(typingResponse);
       setMessages((prev) => [...prev, { role: 'assistant', content: typingResponse }]);
       setTypingResponse(null);
       onProjectsChanged && onProjectsChanged();
     }
   });
+
+  const playAudioData = useCallback(async (audioData) => {
+    if (!audioData || audioData.length === 0) return;
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') await ctx.resume();
+      const buffer = await ctx.decodeAudioData(audioData.slice(0).buffer);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      sourceNodeRef.current = source;
+      source.onended = () => { sourceNodeRef.current = null; };
+      source.start();
+    } catch (e) {}
+  }, []);
 
   // Auto-scroll
   useEffect(() => {
@@ -104,6 +126,10 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
     }
     if (!isOpen) {
       tts.stop();
+      if (sourceNodeRef.current) {
+        try { sourceNodeRef.current.stop(); } catch (e) {}
+        sourceNodeRef.current = null;
+      }
     }
   }, [isOpen]);
 
@@ -170,7 +196,7 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
     if (!content || loading || typingResponse) return;
 
     const userMsg = { role: 'user', content };
-    const newMessages = [...messages, userMsg];
+    const newMessages = [...messagesRef.current, userMsg];
     setMessages(newMessages);
     setInput('');
     setError(null);
@@ -178,8 +204,14 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
 
     try {
       const chatHistory = newMessages.map((m) => ({ role: m.role, content: m.content }));
-      const response = await window.api.magiChat(chatHistory);
-      setTypingResponse(response);
+      if (tts.voiceEnabled) {
+        const { text: response, audio } = await window.api.magiChatWithVoice(chatHistory);
+        setTypingResponse(response);
+        if (audio) playAudioData(audio);
+      } else {
+        const response = await window.api.magiChat(chatHistory);
+        setTypingResponse(response);
+      }
     } catch (err) {
       const msg = err.message || 'UNKNOWN ERROR';
       if (msg.includes('API KEY')) {
@@ -211,14 +243,14 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
           <div className="magi-header-left">
             <span className="magi-status-dot" />
             <div>
-              <div className="magi-title">// MAGI-04 ONLINE</div>
+              <div className="magi-title">{gmiMode ? '// MAGI-04 ONLINE' : 'Assistant'}</div>
               <div className="magi-subtitle">
                 {tts.isSpeaking ? (
-                  <span className="magi-transmitting">// TRANSMITTING</span>
+                  <span className="magi-transmitting">{gmiMode ? '// TRANSMITTING' : 'Speaking...'}</span>
                 ) : isRecording ? (
-                  <span className="magi-recording">// RECORDING</span>
+                  <span className="magi-recording">{gmiMode ? '// RECORDING' : 'Listening...'}</span>
                 ) : (
-                  'OPERATOR INTERFACE // AUTHORIZED'
+                  gmiMode ? 'OPERATOR INTERFACE // AUTHORIZED' : 'Cmd+K to toggle \u00B7 Cmd+Shift+Space for voice'
                 )}
               </div>
             </div>
@@ -228,7 +260,7 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
               className={`magi-voice-btn ${tts.voiceEnabled ? 'on' : ''}`}
               onClick={() => tts.setVoiceEnabled(!tts.voiceEnabled)}
             >
-              VOICE: {tts.voiceEnabled ? 'ON' : 'OFF'}
+              {gmiMode ? `VOICE: ${tts.voiceEnabled ? 'ON' : 'OFF'}` : `Voice ${tts.voiceEnabled ? 'On' : 'Off'}`}
             </button>
             <button className="magi-close-btn" onClick={onClose}>&times;</button>
           </div>
@@ -238,15 +270,17 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
         <div className="magi-messages" ref={scrollRef}>
           {messages.length === 0 && !typingResponse && !error && (
             <div className="magi-welcome">
-              <div className="magi-welcome-text">MAGI-04 STANDING BY</div>
-              <div className="magi-welcome-hint">Cmd+K to toggle // Cmd+Shift+Space for voice</div>
+              <div className="magi-welcome-text">{gmiMode ? 'MAGI-04 STANDING BY' : 'How can I help?'}</div>
+              <div className="magi-welcome-hint">{gmiMode ? 'Cmd+K to toggle // Cmd+Shift+Space for voice' : 'Cmd+K to toggle \u00B7 Cmd+Shift+Space for voice'}</div>
             </div>
           )}
 
           {messages.map((msg, i) => (
             <div key={i} className={`magi-msg magi-msg-${msg.role}`}>
               <div className="magi-msg-prefix">
-                {msg.role === 'user' ? '> PILOT //' : 'MAGI-04 //'}
+                {msg.role === 'user'
+                  ? (gmiMode ? '> PILOT //' : 'You')
+                  : (gmiMode ? 'MAGI-04 //' : 'Assistant')}
               </div>
               <div className="magi-msg-content">{msg.content}</div>
             </div>
@@ -254,7 +288,7 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
 
           {typingResponse && (
             <div className="magi-msg magi-msg-assistant">
-              <div className="magi-msg-prefix">MAGI-04 //</div>
+              <div className="magi-msg-prefix">{gmiMode ? 'MAGI-04 //' : 'Assistant'}</div>
               <div className="magi-msg-content">
                 {typewriter.displayed}
                 <span className="magi-cursor" />
@@ -281,7 +315,7 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="// ENTER DIRECTIVE"
+            placeholder={gmiMode ? '// ENTER DIRECTIVE' : 'Ask anything...'}
             disabled={loading || !!typingResponse}
             className="magi-input"
           />
@@ -290,7 +324,7 @@ export default function MagiOperator({ isOpen, onClose, onProjectsChanged }) {
             onClick={() => sendMessage()}
             disabled={loading || !!typingResponse || !input.trim()}
           >
-            TRANSMIT
+            {gmiMode ? 'TRANSMIT' : 'Send'}
           </button>
         </div>
       </div>
